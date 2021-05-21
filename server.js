@@ -1,18 +1,40 @@
-//zmienne, stałe
+//======zmienne stałe======//
+const express = require("express");
+const app = express();
+const http = require("http");
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
+const path = require("path");
+const PORT = process.env.PORT || 3000;
 
-var express = require("express");
-var path = require("path");
-var app = express();
-const PORT = 5000;
-
+//======pliki statyczne======//
 app.use(express.static("dist"));
 
+//======testowa tablica na użytkowników======//
+let users = [];
+
+//======get intro.html======//
 app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname + "/dist/intro.html"));
 });
 
-//nasłuch na określonym porcie
+//======zdarzenie połączenia z socketem======//
+io.on("connection", (socket) => {
+  console.log("a user connected");
+  //======zdarzenie rejestracji użytkownika======//
+  socket.on("register user", (user) => {
+    console.log(`REGISTERED ${user}!`);
+    if (users.indexOf(user) == -1 && users.length < 2) users.push(user);
+    io.emit("users", users); //odesłanie do klienta
+  });
+  //======zdarzenie rozłączenia z socketem======//
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+});
 
-app.listen(PORT, function () {
-  console.log("start serwera na porcie " + PORT);
+//======nasłuch na określonym porcie======//
+server.listen(PORT, function () {
+  console.log(`server running at http://localhost:${PORT}/`);
 });
