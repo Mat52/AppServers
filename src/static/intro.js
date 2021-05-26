@@ -5,6 +5,7 @@ import "/src/styles/style.scss";
 import vs from "/src/images/vs.png";
 import warrior1 from "/src/images/warrior1.png";
 import warrior2 from "/src/images/warrior2.png";
+import { AdditiveAnimationBlendMode } from "three";
 
 //======socket.io======//
 var socket = io();
@@ -21,6 +22,8 @@ let currentOpacity = 0.8;
 let currentHeight = 500;
 let currentUser;
 let currentOpponent;
+let clientRoom
+let nameOponent
 
 //======asynchronous login function======//
 async function login() {
@@ -33,6 +36,7 @@ async function login() {
 
   //======register user======//
   socket.emit("register user", input.value);
+  socket.emit('create', 'room');
 
   //======collapse box's elements======//
   await new Promise((resolve) => {
@@ -102,12 +106,41 @@ async function login() {
   //======opponent's nickname======//
   h2 = document.createElement("h2");
   h2.id = "opponentNick";
-  h2.textContent = "NONE";
+  h2.textContent = "SEARCHING...";
   box.appendChild(h2);
+
+  
+  
 }
+
+
 
 //======adding button's onclick listener======//
 loginButton.addEventListener("click", login);
+
+
 socket.on("users", function (users) {
   console.log(users);
+  console.log("siema2")
 });
+
+socket.on("serverMsg", function (roomNo) {
+  console.log(`Jestem w pokoju nr.${roomNo}`);
+  clientRoom = roomNo
+});
+
+socket.on("oponent", function (name) {
+  console.log(`Twój przeciwnik to `, name);
+  nameOponent = name
+  setTimeout(function(){
+  var el = document.querySelector('#opponentNick');
+  console.log(el)
+  el.textContent = nameOponent 
+  }, 10000);
+});
+
+socket.on("oponentdisconected", function (userkey) {
+  console.log("Przeciwnik opuścił grę")
+});
+
+
