@@ -1,4 +1,5 @@
 //======zmienne stałe======//
+
 const express = require("express");
 const app = express();
 const http = require("http");
@@ -37,6 +38,9 @@ app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname + "/dist/intro.html"));
 });
 
+app.get("/game", function (req, res) {
+  res.sendFile(path.join(__dirname + "/dist/game.html"));
+});
 //======zdarzenie połączenia z socketem======//
 io.on("connection", async (socket) => {
   
@@ -93,7 +97,7 @@ io.on("connection", async (socket) => {
       let name = __FOUND.name
       console.log(name)
       io.to(userId).emit('oponent', name);
-      io.to(__FOUND.userkey).emit('oponent', user)
+      io.to(__FOUND.userkey).emit('oponent1', user)
     }
 
   })
@@ -105,6 +109,24 @@ io.on("connection", async (socket) => {
 
     
   //======zdarzenie rozłączenia z socketem======//
+  socket.on("ready", () => {
+    db.players.loadDatabase();
+    db.players.find({userkey: socket.userkey}, function (err, docs) {
+      users = docs
+      db.players.find({room: users[0].room}, function (err, docs) {
+        users = docs
+        var __FOUND = users.find(function(post, index) {
+          if(post.userkey != socket.userkey)
+            return true;
+        });
+        if(__FOUND != undefined){
+          let userkey = __FOUND.userkey
+          io.to(userkey).emit('opready', userkey)
+        }
+    })
+
+    
+  })
   socket.on("disconnect", () => {
    if(socket.userkey != undefined){
     var connectionMessage = socket.userkey + " Disconnected";
@@ -123,17 +145,24 @@ io.on("connection", async (socket) => {
           let userkey = __FOUND.userkey
           io.to(userkey).emit('oponentdisconected', userkey)
         }
+      
     })
     
      
-
+  
     })
     
   }
+
   });
-
+  socket.on('redirect', () =>{
+    var destination = '/game';
+    let userkey = socket.userkey
+    io.to(userkey).emit('redirect', destination, userkey)
+  })
+  
 });
-
+})
 //======nasłuch na określonym porcie======//
 server.listen(PORT, function () {
   console.log(`server running at http://localhost:${PORT}/`);

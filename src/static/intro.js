@@ -23,7 +23,8 @@ let currentHeight = 500;
 let currentUser;
 let currentOpponent;
 let clientRoom
-let nameOponent
+let nameOponent = "SEARCHING..."
+let oponentready = "no"
 
 //======asynchronous login function======//
 async function login() {
@@ -68,6 +69,9 @@ async function login() {
       }
     }, 20);
   });
+  
+  
+  
 
   //======change flex settings======//
   box.style.flexDirection = "row";
@@ -94,7 +98,7 @@ async function login() {
   //======player's nickname======//
   let h2 = document.createElement("h2");
   h2.id = "playerNick";
-  h2.textContent = input.value || "GUEST";
+  h2.textContent = input.value;
   box.appendChild(h2);
 
   //======versus image======//
@@ -110,8 +114,76 @@ async function login() {
   box.appendChild(h2);
 
   
+  await new Promise((resolve) => {
+    console.log("jesteś tu")
+
+    let myFunc = setInterval(function(){ 
+        el.textContent = nameOponent
+
+        if(nameOponent !== "SEARCHING..."){
+          socket.emit("ready", currentUser);
+          clearInterval(myFunc);
+          console.log("resolwnij to")
+          resolve("a")
+          
+        }
+
+        }, 100);
+      
+
+    
+
+    var el = document.querySelector('#opponentNick');
+    console.log(el)
+    el.textContent = nameOponent
+    console.log("oponent " + nameOponent)
+    
+    
+  });
+  await new Promise((resolve) => {
+    let myFunc = setInterval(function(){
+      if(oponentready != "no"){
+        let div = document.createElement("div")
+    div.innerHTML = "LET'S PLAY!!!"
+    var progress = document.createElement("PROGRESS")
+    progress.setAttribute("value", "0");
+  progress.setAttribute("max", "10");
+  progress.id ="progress"
+  div.id = "progressmenu"
+  div.appendChild(progress)
+  document.body.appendChild(div)
+    var timeleft = 10;
+var downloadTimer = setInterval(function(){
+  if(timeleft <= 0){
+    clearInterval(downloadTimer);
+    resolve("a")
+  }
+  document.getElementById("progress").value = 10 - timeleft;
+  timeleft -= 1;
+}, 1000);
+        clearInterval(myFunc);
+        console.log("resolwnij to")
+        
+        
+      }
+
+      }, 100);
+    
+    
+
+    
+    
+  });
+  await new Promise ((resolve) => {
+    socket.emit('redirect', currentUser );
+  })
+
+ 
+  
+  
   
 }
+
 
 
 
@@ -129,18 +201,30 @@ socket.on("serverMsg", function (roomNo) {
   clientRoom = roomNo
 });
 
-socket.on("oponent", function (name) {
-  console.log(`Twój przeciwnik to `, name);
-  nameOponent = name
-  setTimeout(function(){
-  var el = document.querySelector('#opponentNick');
-  console.log(el)
-  el.textContent = nameOponent 
-  }, 10000);
-});
 
 socket.on("oponentdisconected", function (userkey) {
   console.log("Przeciwnik opuścił grę")
 });
 
+socket.on("oponent", function (name) {
+  console.log(`Twój przeciwnik to `, name);
+  nameOponent = name
+  
 
+});
+socket.on("oponent1", function (user) {
+  console.log(`Twój przeciwnik to `, user);
+  nameOponent = user
+
+});
+
+socket.on("opready", function (user) {
+  console.log(`Twój przeciwnik jest gotów`);
+  oponentready = "yes"
+
+});
+
+socket.on('redirect', function(destination) {
+  window.location.href = destination;
+  console.log(userkey)
+});
