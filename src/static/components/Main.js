@@ -68,7 +68,7 @@ export default class Main {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     //======GRID HELPER======//
-    const gridHelper = new GridHelper(1000, 10);
+    const gridHelper = new GridHelper(375, 15);
     this.scene.add(gridHelper);
 
     //======TEST TILES======//
