@@ -13,6 +13,7 @@ import {
 //* MAIN THREE COMPONENTS
 import Renderer from "./Renderer";
 import Camera from "./Camera";
+import Grid from "./Grid";
 
 //* MESHES
 import Tile from "./Tile";
@@ -67,21 +68,28 @@ export default class Main {
     //======ORBIT CONTROLS======//
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-    //======GRID HELPER======//
-    const gridHelper = new GridHelper(375, 15);
-    this.scene.add(gridHelper);
+    //======GRID======//
+    this.scene.add(new Grid());
 
     //======TEST TILES======//
-    this.scene.add(new Tile(["craks", 1], [0, 5, 0]));
-    this.scene.add(new Tile(["flowers", 1], [25, 5, 0]));
-    this.scene.add(new Tile(["flowers", 1], [-25, 5, 0]));
-    this.scene.add(new Tile(["craks", 1], [25, 15, 0]));
-    this.scene.add(new Tile(["winds", 1], [100, 5, 100]));
+    this.scene.add(new Tile(["craks", 1], [0, 5, -17.5]));
+    this.scene.add(new Tile(["flowers", 1], [25, 5, 17.5]));
+    this.scene.add(new Tile(["flowers", 1], [-25, 5, 17.5]));
+    this.scene.add(new Tile(["craks", 1], [25, 15, -17.5]));
+    this.scene.add(new Tile(["winds", 1], [100, 5, 17.5]));
 
     //======TEST MODEL======//
 
     //======LIGHT======//
     this.scene.add(new AmbientLight(0xffffff, 0.8));
+
+    //======DATA======//
+    // let getData = async () => {
+    //   let data = await fetch("/getLevel");
+    //   console.log(data);
+    // };
+
+    // getData();
 
     this.render();
   }

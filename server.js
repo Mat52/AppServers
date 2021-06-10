@@ -8,6 +8,7 @@ const io = new Server(server);
 const path = require("path");
 const PORT = process.env.PORT || 3000;
 
+//======DATABASE======//
 var Datastore = require("nedb");
 const { debugPort } = require("process");
 let room = 0;
@@ -19,10 +20,12 @@ db.players = new Datastore({
   autoload: true,
 });
 
-//CORS
-
-//======pliki statyczne======//
+//======STATIC FILES======//
 app.use(express.static("dist"));
+
+//======LEVEL JSON======//
+var level = require("./src/data/levels/turtle.json");
+// console.log(level.schema);
 
 //======testowa tablica na użytkowników======//
 let users = [];
@@ -30,6 +33,10 @@ let users = [];
 //======get intro.html======//
 app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname + "/dist/game.html")); //defaul intro.html
+});
+
+app.get("/getLevel", function (req, res) {
+  res.send("level");
 });
 
 //======zdarzenie połączenia z socketem======//

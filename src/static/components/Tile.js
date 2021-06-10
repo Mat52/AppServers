@@ -20,13 +20,13 @@ export default class Tile extends Mesh {
     const materials = [
       new MeshToonMaterial({
         color: 0xffffff,
-        map: new TextureLoader().load("/src/images/tile_color.png"),
+        map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
       }),
       new MeshToonMaterial({
         color: 0xffffff,
-        map: new TextureLoader().load("/src/images/tile_color.png"),
+        map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
       }),
@@ -40,19 +40,19 @@ export default class Tile extends Mesh {
       }),
       new MeshToonMaterial({
         color: 0xffffff,
-        map: new TextureLoader().load("/src/images/tile_color.png"),
+        map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
       }),
       new MeshToonMaterial({
         color: 0xffffff,
-        map: new TextureLoader().load("/src/images/tile_color.png"),
+        map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
       }),
       new MeshToonMaterial({
         color: 0xffffff,
-        map: new TextureLoader().load("/src/images/tile_color.png"),
+        map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
       }),
