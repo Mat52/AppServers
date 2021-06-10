@@ -4,6 +4,7 @@ module.exports = {
   //   entry: "./src/index.js",
   entry: {
     intro: "./src/static/intro.js",
+    game: "./src/static/game.js",
   },
   output: {
     filename: "[name].js", // bundle.js to wynik kompilacji projektu przez webpacka
@@ -20,6 +21,13 @@ module.exports = {
       title: "Mahjong",
       template: "./src/static/intro.html",
       chunks: ["intro"],
+    }),
+    new HtmlWebpackPlugin({
+      hash: true,
+      filename: "./game.html",
+      title: "Mahjong",
+      template: "./src/static/game.html",
+      chunks: ["game"],
     }),
   ],
 
