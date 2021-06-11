@@ -2,6 +2,7 @@
 const express = require("express");
 const app = express();
 const http = require("http");
+const cors = require("cors");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
@@ -23,6 +24,8 @@ db.players = new Datastore({
 //======STATIC FILES======//
 app.use(express.static("dist"));
 
+app.use(cors());
+
 //======LEVEL JSON======//
 var level = require("./src/data/levels/turtle.json");
 // console.log(level.schema);
@@ -36,7 +39,7 @@ app.get("/", function (req, res) {
 });
 
 app.get("/getLevel", function (req, res) {
-  res.send("level");
+  res.json(level);
 });
 
 //======zdarzenie połączenia z socketem======//

@@ -14,13 +14,17 @@ import {
 import Renderer from "./Renderer";
 import Camera from "./Camera";
 import Grid from "./Grid";
+import LoaderFBX from "./LoaderFBX";
 
 //* MESHES
 import Tile from "./Tile";
 
+import modelPath from "./models/model.fbx";
+
 //ORBIT CONTROLS
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import Model from "./Model";
+import Level from "./Level";
 
 export default class Main {
   constructor(container) {
@@ -39,6 +43,14 @@ export default class Main {
     //======CAMERA======//
     this.camera = new Camera(30, window.innerWidth, window.innerHeight);
 
+    //======DATA======//
+    const getData = async () => {
+      let get = await fetch("http://localhost:3000/getLevel");
+      let data = await get.json();
+      this.level = new Level(this.scene, data);
+    };
+
+    getData();
     //======RAYCASTER======//
     this.raycaster = new Raycaster();
     this.mouseVector = new Vector2();
@@ -66,30 +78,21 @@ export default class Main {
     });
 
     //======ORBIT CONTROLS======//
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
-    //======GRID======//
-    this.scene.add(new Grid());
+    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     //======TEST TILES======//
-    this.scene.add(new Tile(["craks", 1], [0, 5, -17.5]));
-    this.scene.add(new Tile(["flowers", 1], [25, 5, 17.5]));
-    this.scene.add(new Tile(["flowers", 1], [-25, 5, 17.5]));
-    this.scene.add(new Tile(["craks", 1], [25, 15, -17.5]));
-    this.scene.add(new Tile(["winds", 1], [100, 5, 17.5]));
+    // this.scene.add(new Tile(["craks", 1], [0, 1, -1]));
+    // this.scene.add(new Tile(["flowers", 1], [1, 1, 1]));
+    // this.scene.add(new Tile(["flowers", 1], [-1, 1, 1]));
+    // this.scene.add(new Tile(["craks", 1], [1, 2, -1]));
+    // this.scene.add(new Tile(["winds", 1], [4, 1, 1]));
 
     //======TEST MODEL======//
 
+    // new LoaderFBX(this.scene, modelPath).load();
+
     //======LIGHT======//
     this.scene.add(new AmbientLight(0xffffff, 0.8));
-
-    //======DATA======//
-    // let getData = async () => {
-    //   let data = await fetch("/getLevel");
-    //   console.log(data);
-    // };
-
-    // getData();
 
     this.render();
   }

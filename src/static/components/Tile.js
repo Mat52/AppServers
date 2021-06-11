@@ -65,7 +65,11 @@ export default class Tile extends Mesh {
     this.type = type;
 
     //======TILE PROPS======//
-    this.position.set(coords[0], coords[1], coords[2]);
+    this.position.set(
+      coords[0] * 25 - 7 * 25,
+      coords[1] * 10,
+      17.5 + coords[2] * 35 - 4 * 35
+    );
     this.name = `${prefix}${number}`;
 
     this.receiveShadow = true;
