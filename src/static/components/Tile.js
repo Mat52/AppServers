@@ -4,6 +4,7 @@ import {
   MeshBasicMaterial,
   TextureLoader,
   MeshToonMaterial,
+  MeshPhongMaterial,
   EdgesGeometry,
   LineBasicMaterial,
   LineSegments,
@@ -18,48 +19,54 @@ export default class Tile extends Mesh {
 
     //======MATERIALS======//
     const materials = [
-      new MeshToonMaterial({
+      new MeshPhongMaterial({
         color: 0xffffff,
         map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
+        shininess: coords[1] / 10,
       }),
-      new MeshToonMaterial({
+      new MeshPhongMaterial({
         color: 0xffffff,
         map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
+        shininess: coords[1] / 10,
       }),
-      new MeshToonMaterial({
+      new MeshPhongMaterial({
         color: 0xffffff,
         map: new TextureLoader().load(
           `/src/images/tiles/${fullName}/${prefix}${number}.png`
         ),
         emissive: 0x828500,
         emissiveIntensity: 0,
+        shininess: coords[1] / 10,
       }),
-      new MeshToonMaterial({
+      new MeshPhongMaterial({
         color: 0xffffff,
         map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
+        shininess: coords[1] / 10,
       }),
-      new MeshToonMaterial({
+      new MeshPhongMaterial({
         color: 0xffffff,
         map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
+        shininess: coords[1] / 10,
       }),
-      new MeshToonMaterial({
+      new MeshPhongMaterial({
         color: 0xffffff,
         map: new TextureLoader().load("/src/images/tileColor.png"),
         emissive: 0x828500,
         emissiveIntensity: 0,
+        shininess: coords[1] / 10,
       }),
     ];
 
     //======INHARITANCE======//
-    super(new BoxGeometry(25, 10, 35), materials);
+    super(new BoxGeometry(25, 20, 35), materials);
 
     //======PROPS=======/
     this.type = type;
@@ -67,9 +74,10 @@ export default class Tile extends Mesh {
     //======TILE PROPS======//
     this.position.set(
       coords[0] * 25 - 7 * 25,
-      coords[1] * 10,
+      coords[1] * 20,
       17.5 + coords[2] * 35 - 4 * 35
     );
+
     this.name = `${prefix}${number}`;
 
     this.receiveShadow = true;
@@ -82,5 +90,8 @@ export default class Tile extends Mesh {
   }
   update(tile) {
     for (let material of tile.material) material.emissiveIntensity = 1;
+  }
+  normalize(tile) {
+    for (let material of tile.material) material.emissiveIntensity = 0;
   }
 }
