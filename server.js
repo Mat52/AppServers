@@ -1,60 +1,183 @@
 //======zmienne stałe======//
+
+const { uuid } = require("uuidv4");
+
 const express = require("express");
 const app = express();
 const http = require("http");
-const cors = require("cors");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const path = require("path");
 const PORT = process.env.PORT || 3000;
 
-//======DATABASE======//
 var Datastore = require("nedb");
 const { debugPort } = require("process");
 let room = 0;
 let clientNo = 0;
 let roomNo;
+let userkey = "";
 var db = {};
-db.players = new Datastore({
+let id = (db.players = new Datastore({
   filename: "players.db",
   autoload: true,
-});
+}));
 
-//======STATIC FILES======//
-app.use(express.static("dist"));
-
-app.use(cors());
+//CORS
 
 //======LEVEL JSON======//
 var level = require("./src/data/levels/turtle.json");
-// console.log(level.schema);
+level.types = [];
+
+function randomType() {
+  let types = Object.keys(level.eachTotal);
+  let randomIndex = Math.floor(Math.random() * types.length);
+  let randomType = types[randomIndex];
+  return randomType;
+}
+
+function randomTileNumber(type) {
+  return (
+    Math.round(Math.random() * (level.eachTotal[`${type}`].length - 1)) + 1
+  );
+}
+
+level.schema.forEach(function (element, index) {
+  let random = randomType();
+  console.log(random, randomTileNumber(random));
+
+  level.types.push([random, randomTileNumber(random)]);
+});
+
+console.log(level.types);
+
+//======pliki statyczne======//
+app.use(express.static("dist"));
 
 //======testowa tablica na użytkowników======//
 let users = [];
 
 //======get intro.html======//
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname + "/dist/game.html")); //defaul intro.html
+  res.sendFile(path.join(__dirname + "/dist/intro.html"));
 });
 
 app.get("/getLevel", function (req, res) {
   res.json(level);
 });
 
+app.get("/game", function (req, res) {
+  res.sendFile(path.join(__dirname + "/dist/game.html"));
+});
 //======zdarzenie połączenia z socketem======//
 io.on("connection", async (socket) => {
-  clientNo++;
-  console.log(clientNo);
+  sock = socket.userkey;
+
+  console.log(sock);
   console.log("a user connected");
-  //======zdarzenie rejestracji użytkownika======//
+
+  socket.on("connectgame", (data) => {
+    let userkey = data.userkey;
+    userkey = parseFloat(userkey);
+    socket.join(data.room);
+    socket.join(userkey);
+  });
+  socket.on("hittile", (data) => {
+    console.log(data);
+    userkey = data.userkey;
+    userkey = parseFloat(userkey);
+    room = data.room;
+    let roomno = data.room;
+    roomno = parseInt(roomno);
+    console.log(typeof roomno);
+    let points;
+    let opname;
+
+    db.players.loadDatabase();
+    db.players.find({ room: roomno }, function (err, docs) {
+      users = docs;
+      console.log(docs);
+      console.log(userkey);
+      var __FOUND = docs.find(function (post, index) {
+        if (post.userkey == userkey) {
+          console.log("tak");
+          return true;
+        }
+      });
+
+      if (__FOUND != undefined) {
+        points = __FOUND.points;
+        points++;
+        let data1 = {
+          tile1: data.tile1,
+          tile2: data.tile2,
+          points: points,
+          nick: __FOUND.name,
+        };
+
+        db.players.update(
+          { userkey: __FOUND.userkey },
+          { $set: { points: points } },
+          {}, // this argument was missing
+          function (err, numReplaced) {
+            console.log("replaced---->" + numReplaced);
+          }
+        );
+
+        db.players.find({ room: __FOUND.room }, function (err, docs) {
+          users = docs;
+
+          var __FOUND1 = docs.find(function (post, index) {
+            if (post.userkey != userkey) return true;
+          });
+
+          if (__FOUND1 != undefined) {
+            console.log(data1);
+            console.log(__FOUND1.userkey);
+            io.to(__FOUND1.userkey).emit("opscore", { data1 });
+          }
+        });
+      }
+    });
+  });
   socket.on("register user", (user) => {
-    console.log(user);
+    let userkey = Math.random() * 10;
+    let username = user;
+
+    clientNo++;
+
     socket.join(Math.round(clientNo / 2));
     roomNo = Math.round(clientNo / 2);
-    console.log("room" + roomNo);
+    console.log(typeof roomNo);
+    socket.on("start-session", function (data) {
+      console.log("============start-session event================");
+      console.log(data);
+      if (data.sessionId == null) {
+        console.log(username);
+        var session_id = uuidv4(); //generating the sessions_id and then binding that socket to that sessions
+        let iddd = session_id;
+        socket.join(iddd);
+        console.log("joined successfully ");
+        io.to(iddd).emit("set-session-acknowledgement", {
+          sessionId: session_id,
+          userkey: userkey,
+          nick: username,
+          room: roomNo,
+        });
+      } else {
+        socket.room = data.sessionId; //this time using the same session
+        socket.join(socket.room);
+        console.log("joined successfully ");
+        io.to(socket.room).emit("set-session-acknowledgement", {
+          sessionId: data.sessionId,
+          userkey: userkey,
+          nick: username,
+          room: roomNo,
+        });
+      }
+    });
     db.players.loadDatabase();
-    let userkey = Math.random() * 10;
+
     db.players.count({}, function (err, count) {
       let userId = userkey;
       socket.userkey = userkey;
@@ -63,7 +186,6 @@ io.on("connection", async (socket) => {
       if (err) {
         console.log("błąd");
       }
-      console.log(user + " zarejestrowany");
 
       var player = {
         name: user,
@@ -80,45 +202,76 @@ io.on("connection", async (socket) => {
 
       db.players.find({ room: roomNo }, function (err, docs) {
         users = docs;
-        console.log(docs);
+
         var __FOUND = docs.find(function (post, index) {
           if (post.userkey != userkey) return true;
         });
-        console.log(__FOUND);
+
         if (__FOUND != undefined) {
           let name = __FOUND.name;
-          console.log(name);
+
           io.to(userId).emit("oponent", name);
-          io.to(__FOUND.userkey).emit("oponent", user);
+          io.to(__FOUND.userkey).emit("oponent1", user);
         }
       });
     });
   });
 
   //======zdarzenie rozłączenia z socketem======//
-  socket.on("disconnect", () => {
-    if (socket.userkey != undefined) {
-      var connectionMessage = socket.userkey + " Disconnected";
-      console.log(connectionMessage);
-      db.players.loadDatabase();
-      db.players.find({ userkey: socket.userkey }, function (err, docs) {
+  socket.on("ready", () => {
+    db.players.loadDatabase();
+    db.players.find({ userkey: socket.userkey }, function (err, docs) {
+      users = docs;
+      db.players.find({ room: users[0].room }, function (err, docs) {
         users = docs;
-        console.log(users[0].room);
-        db.players.find({ room: users[0].room }, function (err, docs) {
-          users = docs;
-          var __FOUND = users.find(function (post, index) {
-            if (post.userkey != socket.userkey) return true;
-          });
-          if (__FOUND != undefined) {
-            let userkey = __FOUND.userkey;
-            io.to(userkey).emit("oponentdisconected", userkey);
-          }
+        var __FOUND = users.find(function (post, index) {
+          if (post.userkey != socket.userkey) return true;
         });
+        if (__FOUND != undefined) {
+          let userkey = __FOUND.userkey;
+          io.to(userkey).emit("opready", userkey);
+        }
       });
-    }
-  });
-});
+    });
+    socket.on("disconnect", () => {
+      if (socket.userkey != undefined) {
+        var connectionMessage = socket.userkey + " Disconnected";
 
+        db.players.loadDatabase();
+        db.players.find({ userkey: socket.userkey }, function (err, docs) {
+          users = docs;
+
+          db.players.find({ room: users[0].room }, function (err, docs) {
+            users = docs;
+            var __FOUND = users.find(function (post, index) {
+              if (post.userkey != socket.userkey) return true;
+            });
+            if (__FOUND != undefined) {
+              let userkey = __FOUND.userkey;
+              io.to(userkey).emit("oponentdisconected", userkey);
+            }
+          });
+        });
+      }
+    });
+    socket.on("redirect", () => {
+      var destination = "/game";
+      let userkey = socket.userkey;
+      io.to(userkey).emit("redirect", destination, userkey);
+    });
+  });
+
+  function uuidv4() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      function (c) {
+        var r = (Math.random() * 16) | 0,
+          v = c == "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      }
+    );
+  }
+});
 //======nasłuch na określonym porcie======//
 server.listen(PORT, function () {
   console.log(`server running at http://localhost:${PORT}/`);
