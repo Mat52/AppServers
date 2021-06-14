@@ -58,7 +58,37 @@ export default class Main {
         userkey: userkey,
         room: room,
       };
+      let myname = document.getElementById("username");
+      myname.innerHTML = nick;
       socket.emit("connectgame", data);
+      socket.on("opname", (opname) => {
+        let opname1 = document.getElementById("opponent");
+        opname1.innerHTML = opname;
+      });
+      socket.on("counter", (counter) => {
+        let el = document.getElementById("count");
+        el.innerHTML = counter;
+      });
+      socket.on("end", (counter) => {
+        let usp = document.getElementById("userpoints").innerHTML;
+        let opp = document.getElementById("opponentscore1").innerHTML;
+        usp = parseInt(usp);
+        opp = parseInt(opp);
+        let over = document.createElement("div");
+        let div11 = document.createElement("div");
+        over.id = "overlay";
+        div11.id = "text11";
+
+        if (usp > opp) {
+          div11.innerHTML = "YOU ARE THE WINNER &#128081";
+        } else if (opp == usp) {
+          div11.innerHTML = "DRAW...";
+        } else {
+          div11.innerHTML = "YOU LOSE...";
+        }
+        over.appendChild(div11);
+        document.body.appendChild(over);
+      });
     };
 
     UserData();
@@ -68,13 +98,16 @@ export default class Main {
       this.level = new Level(this.scene, data);
       socket.on("opscore", (data1) => {
         // console.log(this.level.tiles);
+        let pop = document.getElementById("opponentscore1");
+        pop.innerHTML = data1.data1.points;
         let tiles = this.level.tiles;
         let scene = this.level.scene;
         let tileToRmv1 = data1.data1.tile1;
         let tileToRmv2 = data1.data1.tile2;
         tiles.forEach(function (element, index) {
           // console.log(element.id);
-          if (element.id == tileToRmv1 || element.id == tileToRmv2) {
+          if (element?.id == tileToRmv1 || element?.id == tileToRmv2) {
+            tiles[index] = null;
             scene.remove(element);
           }
         });
@@ -181,7 +214,17 @@ export default class Main {
     this.renderer.setViewport(0, 0, innerWidth, innerHeight);
     this.renderer.render(this.scene, this.camera);
 
+    let goOn = false;
+
     if (this.level?.tiles) {
+      this.level.tiles.forEach((element, index) => {
+        if (element !== null) {
+          goOn = true;
+        }
+      });
+
+      if (!goOn) socket.emit("end", "end");
+
       this.level.tiles.forEach((element, index) => {
         if (
           element &&
@@ -202,9 +245,12 @@ export default class Main {
       //usuń
       if (this.clicked[0].name === this.clicked[1].name) {
         console.log("USUWAM!");
-
         this.scene.remove(this.clicked[0]);
         this.scene.remove(this.clicked[1]);
+        let score = document.getElementById("userpoints").innerHTML;
+        score = parseInt(score);
+        document.getElementById("userpoints").innerHTML = score + 1;
+
         this.level.tiles.forEach((element, index) => {
           if (element == this.clicked[0] || element == this.clicked[1]) {
             this.level.tiles[index] = null;
@@ -215,8 +261,8 @@ export default class Main {
         let userkey = sessionStorage.getItem("userkey");
         let room = sessionStorage.getItem("room");
         let data = {
-          tile1: this.clicked[0].id,
-          tile2: this.clicked[1].id,
+          tile1: this.clicked[0]?.id,
+          tile2: this.clicked[1]?.id,
           nick: nick,
           userkey: userkey,
           room: room,

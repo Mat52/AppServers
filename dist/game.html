@@ -6,9 +6,34 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mahjong</title>
-  <script defer src="game.js?edc4495cb63e05dee3bf"></script></head>
+
+  <script defer src="game.js?2278334f22a99c18d3a9"></script></head>
   <body>
-    <div id="root"></div>
+    <div id="timer">
+      <div id="timeleft">
+        <p id="timeleft1">TIME LEFT:</p>
+        <p id="count">0</p>
+      </div>
+    </div>
+    <div id="rightscore">
+      <img src="src/images/warrior1.png" alt="" class="left" >
+      <div id="scores">
+        <div id="userscore">
+        <p id="username">User</p>
+        <p id="userpoints">0</p>
+      </div>
+      <div id="opponentscore">
+        <p id="opponent">Opponent</p>
+        <p id="opponentscore1">0</p>
+      </div>
+      </div>
+      
+      <img src="src/images/warrior2.png" alt="" class="right">
+    </div>
+    
+    <div id="root">
+      
+    </div>
   </body>
   <script src="/socket.io/socket.io.js"></script>
 </html>

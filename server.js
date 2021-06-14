@@ -1,7 +1,6 @@
 //======zmienne stałe======//
 
 const { uuid } = require("uuidv4");
-
 const express = require("express");
 const app = express();
 const http = require("http");
@@ -10,9 +9,12 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const path = require("path");
 const PORT = process.env.PORT || 3000;
-
-var Datastore = require("nedb");
 const { debugPort } = require("process");
+
+//======BAZA DANYCH======//
+var Datastore = require("nedb");
+
+//======ZMIENNE UŻYTKOWNIKA======//
 let room = 0;
 let clientNo = 0;
 let roomNo;
@@ -24,11 +26,11 @@ let id = (db.players = new Datastore({
 }));
 
 //CORS
-
 //======LEVEL JSON======//
 var level = require("./src/data/levels/turtle.json");
 level.types = [];
 
+//======LOSOWANIE TYPU KAFELKA======//
 function randomType() {
   let types = Object.keys(level.eachTotal);
   let randomIndex = Math.floor(Math.random() * types.length);
@@ -36,20 +38,20 @@ function randomType() {
   return randomType;
 }
 
+//======LOSOWANIE NUMERU ELEMENTU Z DANEJ KATEGORII======//
 function randomTileNumber(type) {
   return (
     Math.round(Math.random() * (level.eachTotal[`${type}`].length - 1)) + 1
   );
 }
 
+//======TWORZERZENIE TABLICY TYPÓW DLA POSZCZEGÓLNEJ PARY ELEMENTÓW======//
 level.schema.forEach(function (element, index) {
   let random = randomType();
   console.log(random, randomTileNumber(random));
 
   level.types.push([random, randomTileNumber(random)]);
 });
-
-console.log(level.types);
 
 //======pliki statyczne======//
 app.use(express.static("dist"));
@@ -62,26 +64,60 @@ app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname + "/dist/intro.html"));
 });
 
+//======get level======//
 app.get("/getLevel", function (req, res) {
   res.json(level);
 });
 
+//======get game.html======//
 app.get("/game", function (req, res) {
   res.sendFile(path.join(__dirname + "/dist/game.html"));
 });
+
 //======zdarzenie połączenia z socketem======//
 io.on("connection", async (socket) => {
   sock = socket.userkey;
-
   console.log(sock);
   console.log("a user connected");
 
+  //======zdarzenie dołączenia do gry======//
   socket.on("connectgame", (data) => {
+    let opname;
     let userkey = data.userkey;
     userkey = parseFloat(userkey);
     socket.join(data.room);
     socket.join(userkey);
+
+    //======odliczanie======//
+    var counter = 300;
+    var WinnerCountdown = setInterval(function () {
+      io.to(data.room).emit("counter", counter);
+      counter--;
+      if (counter === 0) {
+        io.to(userkey).emit("end", "end");
+        clearInterval(WinnerCountdown);
+      }
+    }, 1000);
+    let roomno = data.room;
+    roomno = parseInt(roomno);
+    db.players.loadDatabase();
+    db.players.find({ room: roomno }, function (err, docs) {
+      users = docs;
+      console.log(docs);
+      console.log(userkey);
+      var __FOUND = docs.find(function (post, index) {
+        if (post.userkey != userkey) {
+          console.log("tak");
+          return true;
+        }
+      });
+      if (__FOUND.userkey != undefined) {
+        opname = __FOUND.name;
+        io.to(userkey).emit("opname", opname);
+      }
+    });
   });
+  //======zdarzenie usunięcia pary elementów przez użytkownika======//
   socket.on("hittile", (data) => {
     console.log(data);
     userkey = data.userkey;
@@ -115,6 +151,7 @@ io.on("connection", async (socket) => {
           nick: __FOUND.name,
         };
 
+        //======aktualizacja bazy danych======//
         db.players.update(
           { userkey: __FOUND.userkey },
           { $set: { points: points } },
@@ -140,6 +177,7 @@ io.on("connection", async (socket) => {
       }
     });
   });
+  //======zdarzenie rejestracji użytkownika======//
   socket.on("register user", (user) => {
     let userkey = Math.random() * 10;
     let username = user;
