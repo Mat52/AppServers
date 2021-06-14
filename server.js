@@ -61,7 +61,7 @@ let users = [];
 
 //======get intro.html======//
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname + "/dist/intro.html"));
+  res.redirect("intro.html");
 });
 
 //======get level======//
@@ -71,7 +71,7 @@ app.get("/getLevel", function (req, res) {
 
 //======get game.html======//
 app.get("/game", function (req, res) {
-  res.sendFile(path.join(__dirname + "/dist/game.html"));
+  res.redirect("game.html");
 });
 
 //======zdarzenie połączenia z socketem======//

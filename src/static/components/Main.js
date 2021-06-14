@@ -8,6 +8,10 @@ import {
   LoadingManager,
   TextureLoader,
   PointLight,
+  MeshNormalMaterial,
+  SpotLight,
+  DirectionalLight,
+  Clock,
 } from "three";
 
 var socket = io();
@@ -16,19 +20,21 @@ import Renderer from "./Renderer";
 import Camera from "./Camera";
 import Grid from "./Grid";
 import LoaderFBX from "./LoaderFBX";
+import LoaderDAE from "./LoaderDAE";
 
 //* MESHES
 import Tile from "./Tile";
 
-import modelPath from "./models/model.fbx";
+// import modelPath from "./models/model.fbx";
 
 //ORBIT CONTROLS
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import Model from "./Model";
+
 import Level from "./Level";
 
 export default class Main {
-  constructor(container) {
+  constructor(container, model) {
+    console.log(`W mainie`);
     //======CONTAINER======//
     this.container = container;
 
@@ -46,75 +52,12 @@ export default class Main {
     this.camera.position.set(0, 700, 0);
     this.camera.lookAt(0, 0, 0);
 
+    //======CLOCK======//
+    this.clock = new Clock();
+
     //======DATA======//
-    const UserData = async () => {
-      let sesid = sessionStorage.getItem("sessionId");
-      let nick = sessionStorage.getItem("nick");
-      let userkey = sessionStorage.getItem("userkey");
-      let room = sessionStorage.getItem("room");
-      let data = {
-        sesid: sesid,
-        nick: nick,
-        userkey: userkey,
-        room: room,
-      };
-      let myname = document.getElementById("username");
-      myname.innerHTML = nick;
-      socket.emit("connectgame", data);
-      socket.on("opname", (opname) => {
-        let opname1 = document.getElementById("opponent");
-        opname1.innerHTML = opname;
-      });
-      socket.on("counter", (counter) => {
-        let el = document.getElementById("count");
-        el.innerHTML = counter;
-      });
-      socket.on("end", (counter) => {
-        let usp = document.getElementById("userpoints").innerHTML;
-        let opp = document.getElementById("opponentscore1").innerHTML;
-        usp = parseInt(usp);
-        opp = parseInt(opp);
-        let over = document.createElement("div");
-        let div11 = document.createElement("div");
-        over.id = "overlay";
-        div11.id = "text11";
-
-        if (usp > opp) {
-          div11.innerHTML = "YOU ARE THE WINNER &#128081";
-        } else if (opp == usp) {
-          div11.innerHTML = "DRAW...";
-        } else {
-          div11.innerHTML = "YOU LOSE...";
-        }
-        over.appendChild(div11);
-        document.body.appendChild(over);
-      });
-    };
-
-    UserData();
-    const getData = async () => {
-      let get = await fetch("http://localhost:3000/getLevel");
-      let data = await get.json();
-      this.level = new Level(this.scene, data);
-      socket.on("opscore", (data1) => {
-        // console.log(this.level.tiles);
-        let pop = document.getElementById("opponentscore1");
-        pop.innerHTML = data1.data1.points;
-        let tiles = this.level.tiles;
-        let scene = this.level.scene;
-        let tileToRmv1 = data1.data1.tile1;
-        let tileToRmv2 = data1.data1.tile2;
-        tiles.forEach(function (element, index) {
-          // console.log(element.id);
-          if (element?.id == tileToRmv1 || element?.id == tileToRmv2) {
-            tiles[index] = null;
-            scene.remove(element);
-          }
-        });
-      });
-    };
-
-    getData();
+    this.userData();
+    this.getData();
 
     //======RAYCASTER======//
     this.raycaster = new Raycaster();
@@ -196,9 +139,30 @@ export default class Main {
     //======ORBIT CONTROLS======//
     // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-    //======TEST MODEL======//
+    //======NINJA MODEL======//
+    this.model = model;
+    console.log(this.model);
+    this.model.rotation.x -= Math.PI / 2;
+    // this.model.rotation.y += Math.PI / 3;
+    this.model.position.set(-300, -100, 200);
 
-    // new LoaderFBX(this.scene, modelPath).load();
+    this.scene.add(this.model);
+    this.model.fbx.playAnim("wait");
+    // let animName = "sad";
+    // let mixer = this.model.fbx.mixer;
+    // console.log(this.model.fbx.model);
+    // mixer.uncacheRoot(this.model.fbx.model);
+    // mixer.clipAction(animName).play();
+
+    //light
+    let modelLight = new DirectionalLight({ intensity: 0 });
+    modelLight.position.set(-400, 200, 0);
+    // modelLight.dely = 0;
+    modelLight.lookAt(this.model.position);
+    this.scene.add(modelLight);
+
+    // let amb = new AmbientLight(0xffffff, 2)
+    // this.scene.add(amb)
 
     //======LIGHT======//
     let point = new PointLight(0xffffff, 0.8);
@@ -212,7 +176,15 @@ export default class Main {
 
   render() {
     this.renderer.setViewport(0, 0, innerWidth, innerHeight);
+    this.renderer.updateSize();
     this.renderer.render(this.scene, this.camera);
+
+    // delta do animacji
+    var delta = this.clock.getDelta();
+    console.log(this.model.fbx);
+    if (this.model.animations[0]) this.model.fbx.update(delta);
+
+    // this.model.fbx.playAnim("");
 
     let goOn = false;
 
@@ -247,6 +219,10 @@ export default class Main {
         console.log("USUWAM!");
         this.scene.remove(this.clicked[0]);
         this.scene.remove(this.clicked[1]);
+        this.model.fbx.playAnim("kick"); //animacja
+        setTimeout(() => {
+          this.model.fbx.playAnim("wait");
+        }, 2500);
         let score = document.getElementById("userpoints").innerHTML;
         score = parseInt(score);
         document.getElementById("userpoints").innerHTML = score + 1;
@@ -275,5 +251,74 @@ export default class Main {
     }
 
     requestAnimationFrame(this.render.bind(this));
+  }
+  async userData() {
+    let sesid = sessionStorage.getItem("sessionId");
+    let nick = sessionStorage.getItem("nick");
+    let userkey = sessionStorage.getItem("userkey");
+    let room = sessionStorage.getItem("room");
+    let data = {
+      sesid: sesid,
+      nick: nick,
+      userkey: userkey,
+      room: room,
+    };
+    let myname = document.getElementById("username");
+    myname.innerHTML = nick;
+    socket.emit("connectgame", data);
+    socket.on("opname", (opname) => {
+      let opname1 = document.getElementById("opponent");
+      opname1.innerHTML = opname;
+    });
+    socket.on("counter", (counter) => {
+      let el = document.getElementById("count");
+      el.innerHTML = counter;
+    });
+    socket.on("end", (counter) => {
+      let usp = document.getElementById("userpoints").innerHTML;
+      let opp = document.getElementById("opponentscore1").innerHTML;
+      usp = parseInt(usp);
+      opp = parseInt(opp);
+      let over = document.createElement("div");
+      let div11 = document.createElement("div");
+      over.id = "overlay";
+      div11.id = "text11";
+
+      if (usp > opp) {
+        div11.innerHTML = "YOU ARE THE WINNER &#128081";
+      } else if (opp == usp) {
+        div11.innerHTML = "DRAW...";
+      } else {
+        div11.innerHTML = "YOU LOSE...";
+      }
+      over.appendChild(div11);
+      document.body.appendChild(over);
+    });
+  }
+  async getData() {
+    let get = await fetch("http://localhost:3000/getLevel");
+    let data = await get.json();
+    this.level = new Level(this.scene, data);
+    socket.on("opscore", (data1) => {
+      // console.log(this.level.tiles);
+      let pop = document.getElementById("opponentscore1");
+      pop.innerHTML = data1.data1.points;
+      let tiles = this.level.tiles;
+      let scene = this.level.scene;
+      let fbx = this.model.fbx;
+      let tileToRmv1 = data1.data1.tile1;
+      let tileToRmv2 = data1.data1.tile2;
+      tiles.forEach(function (element, index) {
+        // console.log(element.id);
+        if (element?.id == tileToRmv1 || element?.id == tileToRmv2) {
+          tiles[index] = null;
+          scene.remove(element);
+          fbx.playAnim("sad");
+          setTimeout(() => {
+            fbx.playAnim("wait");
+          }, 3000);
+        }
+      });
+    });
   }
 }
