@@ -14,7 +14,7 @@ var socket = io();
 const body = document.body;
 const box = document.querySelector("#loginBox");
 const logo = document.querySelector("h1");
-const input = document.querySelector("input[type='text']");
+const input = document.getElementById("uname")
 const loginButton = document.querySelector("#loginButton");
 
 //======dynamic variables======//
