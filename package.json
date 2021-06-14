@@ -24,10 +24,8 @@
   },
   "scripts": {
     "heroku-prebuild": "npm install --dev",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "watch": "webpack --progress --watch",
-    "go": "webpack && webpack serve --open"
+    "build": "webpack --mode production",
+    "start": "node src/app.js"
   },
   "author": "Krzysztof Śliwiński, Mateusz Łopatkiewicz - 3id1",
   "license": "ISC"
