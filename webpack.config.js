@@ -17,16 +17,16 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       hash: true,
-      filename: "intro.html",
+      filename: "./intro.html",
       title: "Mahjong",
-      template: "src/static/intro.html",
+      template: "./src/static/intro.html",
       chunks: ["intro"],
     }),
     new HtmlWebpackPlugin({
       hash: true,
-      filename: "game.html",
+      filename: "./game.html",
       title: "Mahjong",
-      template: "src/static/game.html",
+      template: "./src/static/game.html",
       chunks: ["game"],
     }),
   ],
