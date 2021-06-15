@@ -112,11 +112,11 @@ html {
   }
   
   #ball {
-    width: 100px;
-    height: 100px;
+    width: 500px;
+    height: 500px;
     border-radius: 50%;
     position: absolute;
-    left: 50%;
+    left: 65%;
     top: 50%;
     transform: translate(-50%, -50%);
     animation: roll 0.5s infinite;
