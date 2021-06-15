@@ -7,8 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mahjong</title>
 
-  <script defer src="game.js?6f0d69859cdeb91afa9e"></script></head>
+  <script defer src="game.js?5431a21af50bb8e50f20"></script></head>
   <body>
+
+    <div id="loadingScreen"><div id="ball"></div></div>
     <div id="timer">
       <div id="timeleft">
         <p id="timeleft1">TIME LEFT:</p>
@@ -16,7 +18,7 @@
       </div>
     </div>
     <div id="rightscore">
-      <img src="src/images/warrior1.png" alt="" class="left" >
+      <img src="src/images/warrior1.png" alt="" class="left" />
       <div id="scores">
         <div id="userscore">
         <p id="username">User</p>
@@ -31,9 +33,10 @@
       <img src="src/images/warrior2.png" alt="" class="right">
     </div>
     
-    <div id="root">
+    
       
     </div>
+    <div id="root"></div>
   </body>
   <script src="/socket.io/socket.io.js"></script>
 </html>
